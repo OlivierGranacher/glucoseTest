@@ -1,0 +1,37 @@
+---
+title: "Blood Glucose Trends"
+author: "Olivier G."
+date: "`r Sys.Date()`"
+output:
+  prettydoc::html_pretty:
+    theme: architect
+    highlight: github
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+## Plot
+
+```{r setup, echo=F, warning=F, message=F}
+knitr::opts_chunk$set(echo = F, eval = T, message = F, warning = F)
+library(googlesheets4)
+library(tidyverse, quietly = T)
+library(hms)
+hourStep <- "1 hour" # hour step to display in graph 
+```
+
+```{r collectData}
+d <- googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/159j0AEn65Gc20nuWYih2z_qk1CSCxjNCmOYR0L5v2Rg/edit?usp=sharing", trim_ws = T)
+```
+
+`r nrow(d)` lignes récupérées
+
+```{r dataSet}
+ d <- d %>% mutate(hour = lubridate::round_date(date, hourStep))
+```
+```{r plot, include=TRUE}
+ggplot(d, aes(x = hour, y = glucose)) +
+  geom_point()
+```
+
