@@ -11,14 +11,14 @@ editor_options:
     wrap: 72
 ---
 
-## Plot
+## Plots
 
 ```{r setup, echo=F, warning=F, message=F}
 knitr::opts_chunk$set(echo = F, eval = T, message = F, warning = F)
 library(googlesheets4)
 library(tidyverse, quietly = T)
 library(hms)
-hourStep <- "1 hour" # hour step to display in graph 
+hourStep <- 1  # hour step to display in graph 
 ```
 
 ```{r collectData}
@@ -28,10 +28,25 @@ d <- googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/159j0AEn6
 `r nrow(d)` lignes récupérées
 
 ```{r dataSet}
- d <- d %>% mutate(hour = lubridate::round_date(date, hourStep))
+ d <- d %>% mutate(hour = lubridate::hour(date))
 ```
 ```{r plot, include=TRUE}
 ggplot(d, aes(x = hour, y = glucose)) +
-  geom_point()
+  geom_point() +
+  geom_smooth() +
+  labs(title = "Valeurs Glucose par heure")
+```
+```{r histoglucose, include=TRUE}
+ggplot(d, aes(x = glucose)) +
+  geom_histogram(aes(y = ..density..), alpha = .5, color = "black") +
+  labs(y ="") +
+  scale_x_continuous(breaks = seq(60, 120, 10)) +
+  geom_function( fun = dnorm, args = list(mean = mean(d$glucose), sd = sd(d$glucose))) +
+  labs(title = "Distribution du glucose")
+  theme(axis.text.y = element_blank(),
+        axis.ticks.y = element_blank() ,
+        panel.grid.major.y = element_blank(),
+        panel.grid.minor.y = element_blank())
+
 ```
 
