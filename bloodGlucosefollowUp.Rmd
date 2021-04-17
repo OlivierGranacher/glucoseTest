@@ -25,24 +25,29 @@ hourStep <- 1  # hour step to display in graph
 d <- googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/159j0AEn65Gc20nuWYih2z_qk1CSCxjNCmOYR0L5v2Rg/edit?usp=sharing", trim_ws = T)
 ```
 
-`r nrow(d)` lignes récupérées
+`r nrow(d)` valeurs récupérées
+
+Moyenne Glucose: `r signif(mean(d$glucose), 3)` mg/dl
 
 ```{r dataSet}
  d <- d %>% mutate(hour = lubridate::hour(date))
 ```
+
 ```{r plot, include=TRUE}
 ggplot(d, aes(x = hour, y = glucose)) +
   geom_point() +
   geom_smooth() +
+  geom_hline(yintercept = mean(d$glucose), lty = 2) +
   labs(title = "Valeurs Glucose par heure")
 ```
+
 ```{r histoglucose, include=TRUE}
 ggplot(d, aes(x = glucose)) +
   geom_histogram(aes(y = ..density..), alpha = .5, color = "black") +
   labs(y ="") +
   scale_x_continuous(breaks = seq(60, 120, 10)) +
   geom_function( fun = dnorm, args = list(mean = mean(d$glucose), sd = sd(d$glucose))) +
-  labs(title = "Distribution du glucose")
+  labs(title = "Distribution du glucose") +
   theme(axis.text.y = element_blank(),
         axis.ticks.y = element_blank() ,
         panel.grid.major.y = element_blank(),
@@ -50,3 +55,13 @@ ggplot(d, aes(x = glucose)) +
 
 ```
 
+```{r dayEvolution, include=TRUE}
+d %>% 
+  mutate(jour = lubridate::floor_date(date, "day")) %>% 
+  group_by(jour) %>% 
+  mutate(n = n()) %>% 
+  filter(n>10) %>% 
+  ggplot(aes(x = jour, y = glucose)) +
+  stat_summary(fun.data = mean_cl_boot)
+
+```
