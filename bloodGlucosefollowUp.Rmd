@@ -18,7 +18,7 @@ knitr::opts_chunk$set(echo = F, eval = T, message = F, warning = F)
 library(googlesheets4)
 library(tidyverse, quietly = T)
 library(hms)
-hourStep <- 1  # hour step to display in graph 
+hourStep <- "1 hour" # hour step to display in graph 
 ```
 
 ```{r collectData}
@@ -30,15 +30,17 @@ d <- googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/159j0AEn6
 Moyenne Glucose: `r signif(mean(d$glucose), 3)` mg/dl
 
 ```{r dataSet}
- d <- d %>% mutate(hour = lubridate::hour(date))
+ d <- d %>%
+   mutate(hour = lubridate::hour(date))
 ```
 
 ```{r plot, include=TRUE}
 ggplot(d, aes(x = hour, y = glucose)) +
-  geom_point() +
+  geom_point(shape = 21, fill = "grey")+
   geom_smooth() +
+  coord_cartesian(ylim = c(50, 140)) +
   geom_hline(yintercept = mean(d$glucose), lty = 2) +
-  labs(title = "Valeurs Glucose par heure")
+  labs(title = "Valeurs Glucose par heure  de la journée", x ="", y = "")
 ```
 
 ```{r histoglucose, include=TRUE}
@@ -46,8 +48,9 @@ ggplot(d, aes(x = glucose)) +
   geom_histogram(aes(y = ..density..), alpha = .5, color = "black") +
   labs(y ="") +
   scale_x_continuous(breaks = seq(60, 120, 10)) +
-  geom_function( fun = dnorm, args = list(mean = mean(d$glucose), sd = sd(d$glucose))) +
-  labs(title = "Distribution du glucose") +
+  geom_function( fun = dnorm, args = list(mean = mean(d$glucose), sd = sd(d$glucose)), color = "blue") +
+   geom_vline(xintercept = mean(d$glucose), lty = 2) +
+  labs(title = "Distribution des valeurs de  glucose", x = "", y = "") +
   theme(axis.text.y = element_blank(),
         axis.ticks.y = element_blank() ,
         panel.grid.major.y = element_blank(),
@@ -60,8 +63,9 @@ d %>%
   mutate(jour = lubridate::floor_date(date, "day")) %>% 
   group_by(jour) %>% 
   mutate(n = n()) %>% 
-  filter(n>10) %>% 
+  filter(n>4) %>% 
   ggplot(aes(x = jour, y = glucose)) +
-  stat_summary(fun.data = mean_cl_boot)
+  stat_summary(fun.data = mean_cl_boot) +
+  labs(title = "Glucose Moyen par jour", x = "", y = "")
 
 ```
